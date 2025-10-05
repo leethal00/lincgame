@@ -48,27 +48,29 @@
         }
         #reserveShips {
             position: absolute;
-            bottom: 80px;
+            bottom: 140px;
             left: 10px;
             z-index: 10;
             width: 200px;
             height: 40px;
         }
         #mobileControls {
-            position: absolute;
+            position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 120px;
+            height: 140px;
             z-index: 20;
             display: none;
+            background: rgba(0, 0, 0, 0.5);
+            padding-bottom: env(safe-area-inset-bottom);
         }
         .control-btn {
             position: absolute;
-            background: rgba(0, 255, 0, 0.2);
-            border: 2px solid #0f0;
+            background: rgba(0, 255, 0, 0.3);
+            border: 3px solid #0f0;
             color: #0f0;
-            font-size: 24px;
+            font-size: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -76,33 +78,62 @@
             font-weight: bold;
             user-select: none;
             touch-action: none;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
         }
         .control-btn:active {
-            background: rgba(0, 255, 0, 0.4);
+            background: rgba(0, 255, 0, 0.6);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.8);
         }
         #leftBtn {
-            left: 20px;
-            bottom: 20px;
-            width: 80px;
-            height: 80px;
+            left: 15px;
+            bottom: 30px;
+            width: 90px;
+            height: 90px;
         }
         #rightBtn {
-            left: 120px;
-            bottom: 20px;
-            width: 80px;
-            height: 80px;
+            left: 125px;
+            bottom: 30px;
+            width: 90px;
+            height: 90px;
         }
         #shootBtn {
-            right: 20px;
-            bottom: 20px;
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 0, 0, 0.2);
+            right: 15px;
+            bottom: 30px;
+            width: 90px;
+            height: 90px;
+            background: rgba(255, 0, 0, 0.3);
             border-color: #f00;
             color: #f00;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
         }
         #shootBtn:active {
-            background: rgba(255, 0, 0, 0.4);
+            background: rgba(255, 0, 0, 0.6);
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+        }
+        @media (max-height: 600px) {
+            #mobileControls {
+                height: 100px;
+            }
+            .control-btn {
+                width: 70px;
+                height: 70px;
+                font-size: 24px;
+            }
+            #leftBtn {
+                left: 10px;
+                bottom: 15px;
+            }
+            #rightBtn {
+                left: 95px;
+                bottom: 15px;
+            }
+            #shootBtn {
+                right: 10px;
+                bottom: 15px;
+            }
+            #reserveShips {
+                bottom: 110px;
+            }
         }
         #gameOver {
             position: absolute;
