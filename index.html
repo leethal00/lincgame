@@ -2,13 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Space Galaga</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         body {
             background: #000;
@@ -20,6 +23,8 @@
             overflow: hidden;
             width: 100vw;
             height: 100vh;
+            position: fixed;
+            touch-action: none;
         }
         #gameContainer {
             position: relative;
@@ -37,17 +42,67 @@
             top: 10px;
             left: 10px;
             color: #0f0;
-            font-size: 18px;
+            font-size: 16px;
             text-shadow: 0 0 10px #0f0;
             z-index: 10;
         }
         #reserveShips {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
+            bottom: 80px;
+            left: 10px;
             z-index: 10;
             width: 200px;
             height: 40px;
+        }
+        #mobileControls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 120px;
+            z-index: 20;
+            display: none;
+        }
+        .control-btn {
+            position: absolute;
+            background: rgba(0, 255, 0, 0.2);
+            border: 2px solid #0f0;
+            color: #0f0;
+            font-size: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            user-select: none;
+            touch-action: none;
+        }
+        .control-btn:active {
+            background: rgba(0, 255, 0, 0.4);
+        }
+        #leftBtn {
+            left: 20px;
+            bottom: 20px;
+            width: 80px;
+            height: 80px;
+        }
+        #rightBtn {
+            left: 120px;
+            bottom: 20px;
+            width: 80px;
+            height: 80px;
+        }
+        #shootBtn {
+            right: 20px;
+            bottom: 20px;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #f00;
+            color: #f00;
+        }
+        #shootBtn:active {
+            background: rgba(255, 0, 0, 0.4);
         }
         #gameOver {
             position: absolute;
@@ -55,34 +110,35 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(0, 0, 0, 0.95);
-            padding: 40px;
+            padding: 20px;
             border: 3px solid #0f0;
             color: #0f0;
             text-align: center;
             display: none;
             box-shadow: 0 0 30px #0f0;
             z-index: 100;
+            max-width: 90vw;
         }
         #gameOver h1 {
-            font-size: 48px;
-            margin-bottom: 20px;
+            font-size: 32px;
+            margin-bottom: 15px;
             text-shadow: 0 0 20px #0f0;
         }
         #gameOver p {
-            font-size: 24px;
-            margin: 10px 0;
+            font-size: 18px;
+            margin: 8px 0;
         }
         #gameOver button {
-            margin-top: 20px;
-            padding: 15px 40px;
-            font-size: 20px;
+            margin-top: 15px;
+            padding: 12px 30px;
+            font-size: 18px;
             background: #000;
             color: #0f0;
             border: 2px solid #0f0;
             cursor: pointer;
             font-family: 'Courier New', monospace;
         }
-        #gameOver button:hover {
+        #gameOver button:active {
             background: #0f0;
             color: #000;
         }
@@ -92,16 +148,17 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(0, 0, 0, 0.95);
-            padding: 50px;
+            padding: 30px;
             border: 4px solid #0f0;
             color: #0f0;
             text-align: center;
             box-shadow: 0 0 40px #0f0;
             z-index: 100;
+            max-width: 90vw;
         }
         #mainMenu h1 {
-            font-size: 64px;
-            margin-bottom: 30px;
+            font-size: 36px;
+            margin-bottom: 20px;
             text-shadow: 0 0 30px #0f0;
             animation: pulse 2s infinite;
         }
@@ -112,26 +169,30 @@
         #mainMenu button {
             display: block;
             width: 100%;
-            margin: 15px 0;
-            padding: 20px 50px;
-            font-size: 24px;
+            margin: 10px 0;
+            padding: 15px 30px;
+            font-size: 18px;
             background: #000;
             color: #0f0;
             border: 3px solid #0f0;
             cursor: pointer;
             font-family: 'Courier New', monospace;
-            transition: all 0.3s;
         }
-        #mainMenu button:hover {
+        #mainMenu button:active {
             background: #0f0;
             color: #000;
-            box-shadow: 0 0 20px #0f0;
-            transform: scale(1.05);
         }
         #mainMenu p {
-            margin-top: 20px;
-            font-size: 16px;
+            margin-top: 15px;
+            font-size: 14px;
             opacity: 0.7;
+        }
+        @media (min-width: 768px) {
+            #mainMenu h1 { font-size: 64px; }
+            #mainMenu button { font-size: 24px; padding: 20px 50px; }
+            #gameOver h1 { font-size: 48px; }
+            #gameOver p { font-size: 24px; }
+            #ui { font-size: 18px; }
         }
     </style>
 </head>
@@ -143,13 +204,18 @@
             <div>LEVEL: <span id="level">1</span></div>
         </div>
         <canvas id="reserveShips"></canvas>
+        <div id="mobileControls">
+            <div class="control-btn" id="leftBtn">◄</div>
+            <div class="control-btn" id="rightBtn">►</div>
+            <div class="control-btn" id="shootBtn">●</div>
+        </div>
         <div id="mainMenu">
             <h1>SPACE GALAGA</h1>
             <button onclick="startGame(1)">START GAME</button>
             <button onclick="startGame(5)">TEST BOSS LEVEL</button>
             <button onclick="startGame(10)">LEVEL 10</button>
             <button onclick="startGame(15)">LEVEL 15</button>
-            <p>Use Arrow Keys to Move | Spacebar to Shoot</p>
+            <p>Use Arrows/Touch to Move | Space/Button to Shoot</p>
         </div>
         <div id="gameOver">
             <h1>GAME OVER</h1>
@@ -165,6 +231,19 @@
         
         const reserveCanvas = document.getElementById('reserveShips');
         const reserveCtx = reserveCanvas.getContext('2d');
+        
+        // Detect if mobile device
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                         (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+        
+        // Show mobile controls if on mobile
+        if (isMobile) {
+            document.getElementById('mobileControls').style.display = 'block';
+        }
+        
+        // Prevent scrolling and zooming
+        document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        document.addEventListener('gesturestart', (e) => e.preventDefault());
         
         // Set canvas to full screen
         function resizeCanvas() {
@@ -190,7 +269,12 @@
             capturingEnemy: null,
             playerDying: false,
             deathTimer: 0,
-            respawnTimer: 0
+            respawnTimer: 0,
+            touchControls: {
+                left: false,
+                right: false,
+                shoot: false
+            }
         };
 
         // Player ship
@@ -211,6 +295,43 @@
         let particles = [];
         let stars = [];
         let tractorBeams = [];
+        let lastShootTime = 0;
+
+        // Mobile touch controls
+        function setupTouchControls() {
+            const leftBtn = document.getElementById('leftBtn');
+            const rightBtn = document.getElementById('rightBtn');
+            const shootBtn = document.getElementById('shootBtn');
+
+            leftBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                game.touchControls.left = true;
+            });
+            leftBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                game.touchControls.left = false;
+            });
+
+            rightBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                game.touchControls.right = true;
+            });
+            rightBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                game.touchControls.right = false;
+            });
+
+            shootBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                game.touchControls.shoot = true;
+            });
+            shootBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                game.touchControls.shoot = false;
+            });
+        }
+
+        setupTouchControls();
 
         // Create starfield
         for (let i = 0; i < 100; i++) {
@@ -234,7 +355,6 @@
             game.bossLevel = (game.level % 5 === 0);
             
             if (game.bossLevel) {
-                // Boss level - create a large boss enemy
                 game.bossEnemy = {
                     x: canvas.width / 2,
                     y: 100,
@@ -253,7 +373,6 @@
                 };
                 enemies.push(game.bossEnemy);
                 
-                // Add support ships that spiral around the boss
                 const numSupport = 4 + Math.floor(game.level / 5);
                 for (let i = 0; i < numSupport; i++) {
                     const angle = (Math.PI * 2 / numSupport) * i;
@@ -282,7 +401,6 @@
                     enemies.push(supportShip);
                 }
             } else {
-                // Normal level
                 const rows = Math.min(2 + Math.floor(game.level / 6), 4);
                 const cols = 7;
                 const spacing = 38;
@@ -336,8 +454,11 @@
         function shootBullet() {
             if (game.playerDying || game.respawnTimer > 0) return;
             
+            const now = Date.now();
+            if (now - lastShootTime < 200) return; // Rate limit shooting
+            lastShootTime = now;
+            
             if (player.dualFighter) {
-                // Dual fighter shoots two bullets
                 bullets.push({
                     x: player.x - 15,
                     y: player.y,
@@ -435,7 +556,6 @@
         function update() {
             if (game.state !== 'playing') return;
 
-            // Handle player death animation
             if (game.playerDying) {
                 game.deathTimer--;
                 if (game.deathTimer <= 0) {
@@ -444,17 +564,12 @@
                 }
             }
 
-            // Handle respawn
             if (game.respawnTimer > 0) {
                 game.respawnTimer--;
                 if (game.respawnTimer === 0) {
                     player.x = canvas.width / 2;
                     player.y = canvas.height - 60;
-                    
-                    // Clear all enemy bullets on respawn
                     enemyBullets = [];
-                    
-                    // Reset enemies to formation
                     enemies.forEach(enemy => {
                         if (enemy.originalX !== undefined) {
                             enemy.x = enemy.originalX;
@@ -468,7 +583,6 @@
 
             if (game.playerDying || game.respawnTimer > 0) return;
 
-            // Update stars
             stars.forEach(star => {
                 star.y += star.speed;
                 if (star.y > canvas.height) {
@@ -477,28 +591,30 @@
                 }
             });
 
-            // Move player
+            // Handle touch shooting
+            if (game.touchControls.shoot) {
+                shootBullet();
+            }
+
+            // Move player (keyboard or touch)
             if (!game.playerDying && game.respawnTimer === 0 && !game.capturingEnemy) {
-                if (game.keys['ArrowLeft'] && player.x > player.width / 2) {
+                if ((game.keys['ArrowLeft'] || game.touchControls.left) && player.x > player.width / 2) {
                     player.x -= player.speed;
                 }
-                if (game.keys['ArrowRight'] && player.x < canvas.width - player.width / 2) {
+                if ((game.keys['ArrowRight'] || game.touchControls.right) && player.x < canvas.width - player.width / 2) {
                     player.x += player.speed;
                 }
             }
 
-            // Update bullets
             bullets = bullets.filter(b => {
                 b.y -= b.speed;
                 return b.y > 0;
             });
 
-            // Update tractor beam capturing
             if (game.capturingEnemy) {
                 const enemy = game.capturingEnemy;
                 
                 if (enemy.capturePhase === 'descending') {
-                    // Enemy descends to mid screen
                     if (enemy.y < enemy.captureTargetY) {
                         enemy.y += 2;
                     } else {
@@ -512,17 +628,14 @@
                         }];
                     }
                 } else if (enemy.capturePhase === 'beaming') {
-                    // Activate tractor beam
                     enemy.captureProgress++;
                     tractorBeams[0].captureProgress = enemy.captureProgress;
                     
-                    // Pull player upward
                     if (enemy.captureProgress > 30 && enemy.captureProgress < 120) {
                         player.y -= 2;
                     }
                     
                     if (enemy.captureProgress > 120) {
-                        // Ship captured!
                         game.capturedShip = {
                             x: enemy.x,
                             y: enemy.y - 30
@@ -532,7 +645,6 @@
                         tractorBeams = [];
                     }
                 } else if (enemy.capturePhase === 'ascending') {
-                    // Return to formation with captured ship
                     if (enemy.y > enemy.captureOriginalY) {
                         enemy.y -= 2;
                     } else {
@@ -540,20 +652,16 @@
                         enemy.x = enemy.captureOriginalX;
                         enemy.capturing = false;
                         game.capturingEnemy = null;
-                        
-                        // Reset player position
                         player.x = canvas.width / 2;
                         player.y = canvas.height - 60;
                     }
                 }
             }
 
-            // Update enemy bullets
             enemyBullets = enemyBullets.filter(b => {
                 b.x += b.vx;
                 b.y += b.vy;
                 
-                // Check collision with player
                 if (!game.playerDying && game.respawnTimer === 0 && !game.capturingEnemy && tractorBeams.length === 0) {
                     if (Math.abs(b.x - player.x) < player.width / 2 &&
                         Math.abs(b.y - player.y) < player.height / 2) {
@@ -574,7 +682,6 @@
                 return b.y < canvas.height && b.x > 0 && b.x < canvas.width;
             });
 
-            // Update particles
             particles = particles.filter(p => {
                 p.x += p.vx;
                 p.y += p.vy;
@@ -582,26 +689,18 @@
                 return p.life > 0;
             });
 
-            // Update enemies
             let changeDirection = false;
             enemies.forEach(enemy => {
                 if (enemy.orbiting) {
-                    // Support ships orbit around the boss with evasive movement
                     enemy.orbitAngle += enemy.orbitSpeed;
-                    
-                    // Add bobbing motion - move in and out
                     enemy.bobAngle += 0.05;
                     enemy.orbitRadiusVariation = Math.sin(enemy.bobAngle) * 40;
                     
-                    // Calculate position with variable radius for evasive movement
                     const currentRadius = enemy.orbitRadius + enemy.orbitRadiusVariation;
                     enemy.x = enemy.orbitCenterX + Math.cos(enemy.orbitAngle) * currentRadius;
                     enemy.y = enemy.orbitCenterY + Math.sin(enemy.orbitAngle) * (currentRadius * 0.6);
-                    
-                    // Add vertical bobbing for more evasiveness
                     enemy.y += Math.sin(enemy.bobAngle * 1.5) * 20;
                     
-                    // Shoot while orbiting
                     enemy.shootTimer--;
                     if (enemy.shootTimer <= 0) {
                         if (Math.random() < 0.4) {
@@ -610,7 +709,6 @@
                         enemy.shootTimer = 100 - game.level * 2;
                     }
                     
-                    // Occasionally break orbit and dive
                     if (Math.random() < 0.003 * game.level) {
                         enemy.orbiting = false;
                         enemy.diving = true;
@@ -618,18 +716,15 @@
                         enemy.diveSpeed = 5 + game.level * 0.25;
                     }
                 } else if (enemy.type === 'megaboss') {
-                    // Boss movement - side to side
                     enemy.x += enemy.vx;
                     
                     if (enemy.x > canvas.width - 100 || enemy.x < 100) {
                         enemy.vx *= -1;
                     }
                     
-                    // Boss shooting pattern
                     enemy.shootTimer--;
                     if (enemy.shootTimer <= 0) {
                         enemyShoot(enemy);
-                        // Boss shoots 3 bullets in a spread
                         enemyBullets.push({
                             x: enemy.x - 30,
                             y: enemy.y,
@@ -648,7 +743,6 @@
                             vy: 5,
                             color: '#ff0080'
                         });
-                        // Additional side shots at higher levels
                         if (game.level >= 10) {
                             enemyBullets.push({
                                 x: enemy.x - 50,
@@ -672,15 +766,12 @@
                         enemy.shootTimer = 60 - game.level * 2;
                     }
                 } else if (enemy.diving) {
-                    // Diving attack
                     enemy.x += Math.cos(enemy.diveAngle) * enemy.diveSpeed;
                     enemy.y += Math.sin(enemy.diveAngle) * enemy.diveSpeed;
                     
-                    // Return to formation or orbit
                     if (enemy.y > canvas.height - 100) {
                         enemy.diving = false;
                         if (game.bossLevel && enemy.type === 'boss') {
-                            // Return to orbit
                             enemy.orbiting = true;
                         } else {
                             enemy.x = enemy.originalX;
@@ -688,37 +779,29 @@
                         }
                     }
                     
-                    // Shoot while diving (reduced)
                     if (Math.random() < 0.015 + game.level * 0.005) {
                         enemyShoot(enemy);
                     }
                 } else if (enemy.spiraling) {
-                    // Spiral attack pattern
                     enemy.spiralAngle += enemy.spiralSpeed;
                     
-                    // Calculate spiral position
                     const spiralX = enemy.spiralCenter.x + Math.cos(enemy.spiralAngle) * enemy.spiralRadius;
                     const spiralY = enemy.spiralCenter.y + Math.sin(enemy.spiralAngle) * enemy.spiralRadius;
                     
                     enemy.x = spiralX;
                     enemy.y = spiralY;
-                    
-                    // Move spiral center downward
                     enemy.spiralCenter.y += 1.5 + game.level * 0.1;
                     
-                    // Complete spiral after full rotation or if off screen
                     if (enemy.spiralAngle > Math.PI * 2 || enemy.spiralCenter.y > canvas.height - 100) {
                         enemy.spiraling = false;
                         enemy.x = enemy.originalX;
                         enemy.y = enemy.originalY;
                     }
                     
-                    // Shoot during spiral
                     if (Math.random() < 0.02 + game.level * 0.005) {
                         enemyShoot(enemy);
                     }
                 } else {
-                    // Normal movement
                     if (!enemy.capturing) {
                         enemy.x += enemy.vx;
                         
@@ -727,7 +810,6 @@
                         }
                     }
                     
-                    // Shooting (reduced frequency but scales with level)
                     if (!enemy.capturing) {
                         enemy.shootTimer--;
                         if (enemy.shootTimer <= 0) {
@@ -737,7 +819,6 @@
                             enemy.shootTimer = 220 - game.level * 3;
                         }
                         
-                        // Chance to dive or spiral or tractor beam
                         startEnemyDive(enemy);
                         startEnemySpiral(enemy);
                         startTractorBeam(enemy);
@@ -754,7 +835,6 @@
                 });
             }
 
-            // Bullet collision
             bullets.forEach((bullet, bIndex) => {
                 enemies.forEach((enemy, eIndex) => {
                     if (Math.abs(bullet.x - enemy.x) < enemy.width / 2 &&
@@ -766,9 +846,7 @@
                         if (enemy.currentHealth <= 0) {
                             createExplosion(enemy.x, enemy.y, enemy.color);
                             
-                            // Check if enemy had captured ship
                             if (enemy.hasCapturedShip && game.capturedShip) {
-                                // Release captured ship - becomes dual fighter!
                                 player.dualFighter = true;
                                 game.capturedShip = null;
                                 createExplosion(enemy.x, enemy.y - 30, '#0ff', 20);
@@ -782,20 +860,17 @@
                 });
             });
 
-            // Check level complete
             if (enemies.length === 0) {
                 if (game.level < game.maxLevel) {
                     game.level++;
                     document.getElementById('level').textContent = game.level;
                     createEnemyFormation();
                 } else {
-                    // Won the game!
                     game.state = 'won';
                     showGameOver(true);
                 }
             }
 
-            // Check if enemies reached bottom
             enemies.forEach(enemy => {
                 if (enemy.y > canvas.height - 50) {
                     gameOver();
@@ -804,14 +879,12 @@
         }
 
         function drawPlayerShipGraphic() {
-            // Sleek futuristic fighter ship
             const gradient = ctx.createLinearGradient(0, -20, 0, 20);
             gradient.addColorStop(0, '#00ffff');
             gradient.addColorStop(0.5, '#0099ff');
             gradient.addColorStop(1, '#0066cc');
             ctx.fillStyle = gradient;
             
-            // Main hull
             ctx.beginPath();
             ctx.moveTo(0, -20);
             ctx.lineTo(-15, 10);
@@ -821,18 +894,15 @@
             ctx.closePath();
             ctx.fill();
             
-            // Glow effect
             ctx.shadowBlur = 20;
             ctx.shadowColor = '#00ffff';
             ctx.fill();
             ctx.shadowBlur = 0;
             
-            // Wings with metallic look
             ctx.fillStyle = '#006699';
             ctx.strokeStyle = '#00ddff';
             ctx.lineWidth = 2;
             
-            // Left wing
             ctx.beginPath();
             ctx.moveTo(-15, 10);
             ctx.lineTo(-25, 5);
@@ -841,7 +911,6 @@
             ctx.fill();
             ctx.stroke();
             
-            // Right wing
             ctx.beginPath();
             ctx.moveTo(15, 10);
             ctx.lineTo(25, 5);
@@ -850,7 +919,6 @@
             ctx.fill();
             ctx.stroke();
             
-            // Cockpit
             ctx.fillStyle = '#ffff00';
             ctx.beginPath();
             ctx.arc(0, -5, 4, 0, Math.PI * 2);
@@ -861,7 +929,6 @@
             ctx.arc(0, -5, 2, 0, Math.PI * 2);
             ctx.fill();
             
-            // Engine glow
             ctx.fillStyle = '#00ffff';
             ctx.shadowBlur = 15;
             ctx.shadowColor = '#00ffff';
@@ -869,7 +936,6 @@
             ctx.fillRect(3, 13, 3, 4);
             ctx.shadowBlur = 0;
             
-            // Accent lines
             ctx.strokeStyle = '#00ffff';
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -879,31 +945,25 @@
         }
 
         function draw() {
-            // Clear canvas
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw stars
             ctx.fillStyle = '#fff';
             stars.forEach(star => {
                 ctx.fillRect(star.x, star.y, star.size, star.size);
             });
 
-            // Draw tractor beams
             tractorBeams.forEach(beam => {
                 ctx.save();
                 
-                // Draw cone-shaped tractor beam
                 const beamHeight = canvas.height - beam.y - 100;
                 const beamWidth = beam.width + (beam.captureProgress * 0.5);
                 
-                // Gradient for beam
                 const beamGradient = ctx.createLinearGradient(beam.x, beam.y, beam.x, beam.y + beamHeight);
                 beamGradient.addColorStop(0, 'rgba(255, 255, 0, 0.8)');
                 beamGradient.addColorStop(0.5, 'rgba(255, 255, 0, 0.4)');
                 beamGradient.addColorStop(1, 'rgba(255, 255, 0, 0.1)');
                 
-                // Draw expanding cone
                 ctx.fillStyle = beamGradient;
                 ctx.beginPath();
                 ctx.moveTo(beam.x - 10, beam.y);
@@ -913,7 +973,6 @@
                 ctx.closePath();
                 ctx.fill();
                 
-                // Glowing edges
                 ctx.strokeStyle = '#ffff00';
                 ctx.lineWidth = 2;
                 ctx.shadowBlur = 20;
@@ -921,7 +980,6 @@
                 ctx.stroke();
                 ctx.shadowBlur = 0;
                 
-                // Animated beam lines
                 for (let i = 0; i < 8; i++) {
                     const offset = (beam.captureProgress * 5 + i * 30) % beamHeight;
                     ctx.globalAlpha = 0.6;
@@ -937,14 +995,12 @@
                 ctx.restore();
             });
 
-            // Draw player (if not dying or respawning or being captured)
             if (!game.playerDying && game.respawnTimer === 0 && !game.capturingEnemy) {
                 ctx.save();
                 ctx.translate(player.x, player.y);
                 drawPlayerShipGraphic();
                 ctx.restore();
                 
-                // Draw second ship if dual fighter
                 if (player.dualFighter) {
                     ctx.save();
                     ctx.translate(player.x - 30, player.y);
@@ -953,7 +1009,6 @@
                 }
             }
 
-            // Draw captured ship with enemy
             if (game.capturedShip) {
                 enemies.forEach(enemy => {
                     if (enemy.hasCapturedShip) {
@@ -967,12 +1022,10 @@
                 });
             }
 
-            // Draw bullets
             bullets.forEach(bullet => {
                 ctx.save();
                 ctx.translate(bullet.x, bullet.y);
                 
-                // Plasma bullet effect
                 const bulletGradient = ctx.createLinearGradient(0, -10, 0, 10);
                 bulletGradient.addColorStop(0, '#ffffff');
                 bulletGradient.addColorStop(0.5, '#00ffff');
@@ -984,19 +1037,16 @@
                 ctx.fillRect(-3, -8, 6, 16);
                 ctx.shadowBlur = 0;
                 
-                // Core glow
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(-1, -6, 2, 12);
                 
                 ctx.restore();
             });
 
-            // Draw enemy bullets
             enemyBullets.forEach(bullet => {
                 ctx.save();
                 ctx.translate(bullet.x, bullet.y);
                 
-                // Energy ball effect
                 const enemyBulletGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 6);
                 enemyBulletGradient.addColorStop(0, '#ffff00');
                 enemyBulletGradient.addColorStop(0.5, '#ff0000');
@@ -1010,7 +1060,6 @@
                 ctx.fill();
                 ctx.shadowBlur = 0;
                 
-                // Inner core
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
                 ctx.arc(0, 0, 2, 0, Math.PI * 2);
@@ -1019,14 +1068,11 @@
                 ctx.restore();
             });
 
-            // Draw enemies
             enemies.forEach(enemy => {
                 ctx.save();
                 ctx.translate(enemy.x, enemy.y);
                 
-                // Mega Boss
                 if (enemy.type === 'megaboss') {
-                    // Draw health bar
                     ctx.fillStyle = '#1a1a1a';
                     ctx.strokeStyle = '#00ff00';
                     ctx.lineWidth = 2;
@@ -1048,24 +1094,20 @@
                     ctx.fillStyle = healthGrad;
                     ctx.fillRect(-60, -70, 120 * healthPercent, 10);
                     
-                    // Massive mothership with metallic body
                     const bodyGrad = ctx.createRadialGradient(0, -10, 0, 0, 0, 50);
                     bodyGrad.addColorStop(0, '#ff0099');
                     bodyGrad.addColorStop(0.5, '#cc0066');
                     bodyGrad.addColorStop(1, '#660033');
                     ctx.fillStyle = bodyGrad;
                     
-                    // Main hull
                     ctx.beginPath();
                     ctx.ellipse(0, 0, 70, 45, 0, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // Armor plating
                     ctx.strokeStyle = '#ff00ff';
                     ctx.lineWidth = 3;
                     ctx.stroke();
                     
-                    // Command deck
                     const deckGrad = ctx.createLinearGradient(0, -35, 0, -5);
                     deckGrad.addColorStop(0, '#ff33cc');
                     deckGrad.addColorStop(1, '#990066');
@@ -1074,7 +1116,6 @@
                     ctx.ellipse(0, -18, 35, 22, 0, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // Weapon pods
                     ctx.fillStyle = '#660033';
                     ctx.strokeStyle = '#ff0066';
                     ctx.lineWidth = 2;
@@ -1083,12 +1124,10 @@
                     ctx.fillRect(55, -15, 25, 25);
                     ctx.strokeRect(55, -15, 25, 25);
                     
-                    // Cannon barrels
                     ctx.fillStyle = '#cc0066';
                     ctx.fillRect(-75, -5, 15, 8);
                     ctx.fillRect(60, -5, 15, 8);
                     
-                    // Energy core windows
                     ctx.fillStyle = '#ffff00';
                     ctx.shadowBlur = 20;
                     ctx.shadowColor = '#ffff00';
@@ -1099,7 +1138,6 @@
                     }
                     ctx.shadowBlur = 0;
                     
-                    // Thrusters
                     ctx.fillStyle = '#00ffff';
                     ctx.shadowBlur = 25;
                     ctx.shadowColor = '#00ffff';
@@ -1109,7 +1147,6 @@
                     ctx.fillRect(45, 35, 15, 10);
                     ctx.shadowBlur = 0;
                     
-                    // Shield effect
                     ctx.strokeStyle = '#ff00ff';
                     ctx.lineWidth = 4;
                     ctx.globalAlpha = 0.4 + Math.sin(Date.now() / 200) * 0.2;
@@ -1119,14 +1156,12 @@
                     ctx.globalAlpha = 1;
                     
                 } else if (enemy.type === 'boss') {
-                    // Elite Crimson Destroyer
                     const bossGrad = ctx.createRadialGradient(0, -5, 5, 0, 0, 20);
                     bossGrad.addColorStop(0, '#ff3333');
                     bossGrad.addColorStop(0.6, '#cc0000');
                     bossGrad.addColorStop(1, '#660000');
                     ctx.fillStyle = bossGrad;
                     
-                    // Main body - aggressive angular design
                     ctx.beginPath();
                     ctx.moveTo(0, -18);
                     ctx.lineTo(-12, -8);
@@ -1138,12 +1173,10 @@
                     ctx.closePath();
                     ctx.fill();
                     
-                    // Armor plating
                     ctx.strokeStyle = '#ff0000';
                     ctx.lineWidth = 2;
                     ctx.stroke();
                     
-                    // Wing blades
                     ctx.fillStyle = '#990000';
                     ctx.beginPath();
                     ctx.moveTo(-18, 0);
@@ -1159,7 +1192,6 @@
                     ctx.closePath();
                     ctx.fill();
                     
-                    // Glowing core
                     ctx.fillStyle = '#ffff00';
                     ctx.shadowBlur = 15;
                     ctx.shadowColor = '#ffff00';
@@ -1168,7 +1200,6 @@
                     ctx.fill();
                     ctx.shadowBlur = 0;
                     
-                    // Eyes
                     ctx.fillStyle = '#ff6666';
                     ctx.shadowBlur = 10;
                     ctx.shadowColor = '#ff0000';
@@ -1178,7 +1209,6 @@
                     ctx.fill();
                     ctx.shadowBlur = 0;
                     
-                    // Engines
                     ctx.fillStyle = '#ff8800';
                     ctx.shadowBlur = 12;
                     ctx.shadowColor = '#ff4400';
@@ -1187,18 +1217,15 @@
                     ctx.shadowBlur = 0;
                     
                 } else if (enemy.type === 'butterfly') {
-                    // Solar Wing Fighter
                     const butterflyGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 25);
                     butterflyGrad.addColorStop(0, '#ffff66');
                     butterflyGrad.addColorStop(0.5, '#ffcc00');
                     butterflyGrad.addColorStop(1, '#ff8800');
                     
-                    // Energy wings
                     ctx.fillStyle = butterflyGrad;
                     ctx.shadowBlur = 20;
                     ctx.shadowColor = '#ffff00';
                     
-                    // Left wing
                     ctx.beginPath();
                     ctx.moveTo(-8, -12);
                     ctx.quadraticCurveTo(-30, -10, -28, 8);
@@ -1206,7 +1233,6 @@
                     ctx.closePath();
                     ctx.fill();
                     
-                    // Right wing
                     ctx.beginPath();
                     ctx.moveTo(8, -12);
                     ctx.quadraticCurveTo(30, -10, 28, 8);
@@ -1215,7 +1241,6 @@
                     ctx.fill();
                     ctx.shadowBlur = 0;
                     
-                    // Wing patterns
                     ctx.strokeStyle = '#ff6600';
                     ctx.lineWidth = 2;
                     ctx.beginPath();
@@ -1223,7 +1248,6 @@
                     ctx.arc(20, -3, 8, 0, Math.PI * 2);
                     ctx.stroke();
                     
-                    // Core body
                     const bodyGrad = ctx.createLinearGradient(0, -15, 0, 10);
                     bodyGrad.addColorStop(0, '#ffaa00');
                     bodyGrad.addColorStop(1, '#cc6600');
@@ -1232,7 +1256,6 @@
                     ctx.ellipse(0, -3, 10, 16, 0, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // Head
                     ctx.fillStyle = '#ffff00';
                     ctx.shadowBlur = 10;
                     ctx.shadowColor = '#ffff00';
@@ -1241,7 +1264,6 @@
                     ctx.fill();
                     ctx.shadowBlur = 0;
                     
-                    // Eyes
                     ctx.fillStyle = '#000';
                     ctx.beginPath();
                     ctx.arc(-3, -12, 2, 0, Math.PI * 2);
@@ -1249,14 +1271,12 @@
                     ctx.fill();
                     
                 } else {
-                    // Emerald Stinger - sleek insectoid fighter
                     const beeGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 15);
                     beeGrad.addColorStop(0, '#00ff88');
                     beeGrad.addColorStop(0.6, '#00cc44');
                     beeGrad.addColorStop(1, '#006622');
                     ctx.fillStyle = beeGrad;
                     
-                    // Segmented body
                     ctx.beginPath();
                     ctx.ellipse(0, -10, 11, 11, 0, 0, Math.PI * 2);
                     ctx.fill();
@@ -1267,7 +1287,6 @@
                     ctx.ellipse(0, 10, 11, 11, 0, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // Armor stripes
                     ctx.strokeStyle = '#004400';
                     ctx.lineWidth = 3;
                     ctx.beginPath();
@@ -1276,7 +1295,6 @@
                     ctx.arc(0, 10, 11, 0, Math.PI * 2);
                     ctx.stroke();
                     
-                    // Translucent energy wings
                     ctx.fillStyle = '#88ffaa';
                     ctx.globalAlpha = 0.5;
                     ctx.shadowBlur = 15;
@@ -1292,7 +1310,6 @@
                     ctx.globalAlpha = 1;
                     ctx.shadowBlur = 0;
                     
-                    // Glowing eyes
                     ctx.fillStyle = '#ffff00';
                     ctx.shadowBlur = 12;
                     ctx.shadowColor = '#ffff00';
@@ -1308,7 +1325,6 @@
                     ctx.arc(6, -12, 2, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // Energy stinger
                     ctx.strokeStyle = '#00ff00';
                     ctx.lineWidth = 2;
                     ctx.shadowBlur = 10;
@@ -1323,13 +1339,10 @@
                 ctx.restore();
             });
 
-            // Draw particles
             particles.forEach(p => {
                 if (p.isExplosion) {
-                    // Fireball effect for player explosions
                     const lifePercent = p.life / p.maxLife;
                     
-                    // Color changes from white -> yellow -> orange -> red
                     if (lifePercent > 0.7) {
                         ctx.fillStyle = '#ffffff';
                     } else if (lifePercent > 0.5) {
@@ -1356,7 +1369,6 @@
                 }
             });
             
-            // Draw reserve ships
             reserveCtx.fillStyle = '#000';
             reserveCtx.fillRect(0, 0, reserveCanvas.width, reserveCanvas.height);
             
@@ -1406,11 +1418,9 @@
             document.getElementById('level').textContent = level;
             document.getElementById('score').textContent = game.score;
             
-            // Reset player position
             player.x = canvas.width / 2;
             player.y = canvas.height - 60;
             
-            // Clear any existing bullets and enemies
             bullets = [];
             enemyBullets = [];
             enemies = [];
@@ -1435,7 +1445,6 @@
             document.getElementById('finalLevel').textContent = game.level;
         }
 
-        // Start game loop (menu will be visible initially)
         gameLoop();
     </script>
 </body>
